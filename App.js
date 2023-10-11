@@ -1,20 +1,39 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import React, {useReducer} from "react";
+import TodoList from "./components/TodoList";
+import { TodosContext } from "./context/TodosContext";
+
+
+const todosInitialState = {
+  todos :[]
+};
 
 export default function App() {
-  return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
-  );
+  const [state, dispatch] = useReducer(todosReducer, todosInitialState)
+  return(
+    <TodosContext.Provider value={{state, dispatch}}>
+      <TodoList/>
+    </TodosContext.Provider>
+  )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+function todosReducer (state, action) {
+  switch(action.type){
+    case 'add':
+      const addedToDos = [...state.todos, action.payload]
+      return{...state, todos:addedToDos}
+    case 'edit':
+      const updatedToDo = {...action.payload}
+      const updatedToDoIndex = state.todos.findIndex(t => t.id === action.payload.id)
+      const updatedToDos = [
+        ...state.todos.slice(0, updatedToDoIndex),
+        updatedToDo,
+        ...state.todos.slice(updatedToDoIndex + 1)
+      ];
+      return {...state, todos: updatedToDos}
+    case 'delete':
+      const filteredTodoState = state.todos.filter(todo => todo.id !== action.payload.id)
+      return {...state, todos:filteredTodoState}
+    default:
+      return todosInitialState
+  }
+}
